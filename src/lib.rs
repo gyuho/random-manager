@@ -1,6 +1,10 @@
-use std::{env, io};
+use std::{
+    env,
+    io::{self, Error, ErrorKind},
+};
 
 use lazy_static::lazy_static;
+use primitive_types::{H160, U256};
 use rand::Rng;
 use ring::rand::{SecureRandom, SystemRandom};
 
@@ -15,9 +19,11 @@ pub fn string(n: usize) -> String {
 }
 
 /// Generates a random string of length "n".
-pub fn bytes(n: usize) -> Result<Vec<u8>, String> {
+pub fn bytes(n: usize) -> io::Result<Vec<u8>> {
     let mut d: Vec<u8> = vec![0u8; n];
-    secure_random().fill(&mut d).map_err(|e| e.to_string())?;
+    secure_random()
+        .fill(&mut d)
+        .map_err(|e| Error::new(ErrorKind::Other, format!("failed secure_random.fill {}", e)))?;
     Ok(d)
 }
 
@@ -29,6 +35,7 @@ fn secure_random() -> &'static dyn SecureRandom {
     RANDOM.deref()
 }
 
+/// RUST_LOG=debug cargo test --package random-manager --lib -- test_string --exact --show-output
 #[test]
 fn test_string() {
     use log::info;
@@ -57,25 +64,27 @@ pub fn tmp_path(n: usize, sfx: Option<&str>) -> io::Result<String> {
     Ok(String::from(tmp_file_path))
 }
 
+/// RUST_LOG=debug cargo test --package random-manager --lib -- test_temp_path --exact --show-output
 #[test]
 fn test_temp_path() {
     let _ = env_logger::builder()
         .filter_level(log::LevelFilter::Info)
         .is_test(true)
         .try_init();
-    use log::info;
 
     let p1 = tmp_path(10, Some(".zstd")).unwrap();
     let p2 = tmp_path(10, Some(".zstd")).unwrap();
     assert_ne!(p1, p2);
 
-    info!("p1: {:?}", p1);
-    info!("p2: {:?}", p2);
+    log::info!("p1: {:?}", p1);
+    log::info!("p2: {:?}", p2);
 }
 
-pub fn secure_u8() -> Result<u8, String> {
+pub fn secure_u8() -> io::Result<u8> {
     let mut d: Vec<u8> = vec![0u8; 1];
-    secure_random().fill(&mut d).map_err(|e| e.to_string())?;
+    secure_random()
+        .fill(&mut d)
+        .map_err(|e| Error::new(ErrorKind::Other, format!("failed secure_random.fill {}", e)))?;
     Ok(d[0])
 }
 
@@ -97,4 +106,54 @@ pub fn u32() -> u32 {
 pub fn u64() -> u64 {
     let mut rng = rand::thread_rng();
     rng.gen()
+}
+
+pub fn h160() -> io::Result<H160> {
+    // MUST BE slice.len() < 4 * 8
+    let mut d: Vec<u8> = vec![0u8; 20];
+    secure_random()
+        .fill(&mut d)
+        .map_err(|e| Error::new(ErrorKind::Other, format!("failed secure_random.fill {}", e)))?;
+    Ok(H160::from_slice(&d))
+}
+
+/// RUST_LOG=debug cargo test --package random-manager --lib -- test_h160 --exact --show-output
+#[test]
+fn test_h160() {
+    let _ = env_logger::builder()
+        .filter_level(log::LevelFilter::Info)
+        .is_test(true)
+        .try_init();
+
+    let v1 = h160().unwrap();
+    let v2 = h160().unwrap();
+    assert_ne!(v1, v2);
+
+    log::info!("v1: {}", v1);
+    log::info!("v2: {}", v2);
+}
+
+pub fn u256() -> io::Result<U256> {
+    // MUST BE slice.len() < 4 * 8
+    let mut d: Vec<u8> = vec![0u8; 32];
+    secure_random()
+        .fill(&mut d)
+        .map_err(|e| Error::new(ErrorKind::Other, format!("failed secure_random.fill {}", e)))?;
+    Ok(U256::from_big_endian(&d))
+}
+
+/// RUST_LOG=debug cargo test --package random-manager --lib -- test_u256 --exact --show-output
+#[test]
+fn test_u256() {
+    let _ = env_logger::builder()
+        .filter_level(log::LevelFilter::Info)
+        .is_test(true)
+        .try_init();
+
+    let v1 = u256().unwrap();
+    let v2 = u256().unwrap();
+    assert_ne!(v1, v2);
+
+    log::info!("v1: {}", v1);
+    log::info!("v2: {}", v2);
 }
