@@ -7,8 +7,8 @@ fn main() {
         env_logger::Env::default().filter_or(env_logger::DEFAULT_FILTER_ENV, "info"),
     );
 
-    let random1 = random_manager::string(100);
-    let random2 = random_manager::string(100);
+    let random1 = random_manager::secure_string(100);
+    let random2 = random_manager::secure_string(100);
     info!("random1: {}", random1);
     info!("random2: {}", random2);
 }

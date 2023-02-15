@@ -1,6 +1,6 @@
 [package]
 name = "random-manager"
-version = "0.0.4" # https://crates.io/crates/random-manager
+version = "0.0.5" # https://crates.io/crates/random-manager
 edition = "2021"
 rust-version = "1.67"
 publish = true
