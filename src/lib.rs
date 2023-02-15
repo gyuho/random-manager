@@ -88,6 +88,27 @@ pub fn secure_u8() -> io::Result<u8> {
     Ok(d[0])
 }
 
+pub fn usize() -> usize {
+    let mut rng = rand::thread_rng();
+    rng.gen()
+}
+
+/// RUST_LOG=debug cargo test --package random-manager --lib -- test_usize --exact --show-output
+#[test]
+fn test_usize() {
+    let _ = env_logger::builder()
+        .filter_level(log::LevelFilter::Info)
+        .is_test(true)
+        .try_init();
+
+    let v1 = usize();
+    let v2 = usize();
+    assert_ne!(v1, v2);
+
+    log::info!("v1: {}", v1);
+    log::info!("v2: {}", v2);
+}
+
 pub fn u8() -> u8 {
     let mut rng = rand::thread_rng();
     rng.gen()
